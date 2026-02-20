@@ -1,7 +1,7 @@
 # Pothole-detector
 This is a python YOLOv5  driven pothole detector 
 
-# =======\ INSTALLATION INSTRUCTIONS =========
+# ======= INSTALLATION INSTRUCTIONS =========
 # Run these commands in your terminal FIRST (one time setup):
 #
 # pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
