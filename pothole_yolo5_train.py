@@ -1,10 +1,3 @@
-"""
-Pothole Detection with YOLOv5
-Dataset: 665 images (70/20/10 train/valid/test split)
-"""
-
-
-
 import os
 from pathlib import Path
 import torch
@@ -23,24 +16,16 @@ DEVICE = 0
 MODEL_TYPE = 'yolov5s'  
 
 
-
 def create_dataset_yaml():
-    """Create dataset.yaml file for YOLOv5"""
-    
     dataset_config = f"""
-# Pothole Detection Dataset Configuration
-
-# Paths
 path: {DATASET_PATH}
 train: images/train
 val: images/valid
 test: images/test
 
-# Classes
-nc: 1  # number of classes
-names: ['pothole']  # class names
+nc: 1
+names: ['pothole']
 """
-    
     yaml_path = os.path.join(DATASET_PATH, 'dataset.yaml')
     with open(yaml_path, 'w') as f:
         f.write(dataset_config.strip())
@@ -49,11 +34,7 @@ names: ['pothole']  # class names
     return yaml_path
 
 
-# ==================== STEP 2: VERIFY DATASET ====================
-
 def verify_dataset(dataset_path):
-    """Check if dataset structure is correct"""
-    
     print("\n=== Verifying Dataset ===")
     
     splits = ['train', 'valid', 'test']
@@ -74,12 +55,9 @@ def verify_dataset(dataset_path):
             stats[split] = {'images': len(images), 'labels': len(labels)}
         else:
             print(f" Warning: {label_dir} not found!")
-            print(f"   Looking for labels in same folder as images...")
-            # Check if labels are in same folder as images
             labels = [f for f in os.listdir(img_dir) if f.endswith('.txt')]
             stats[split] = {'images': len(images), 'labels': len(labels)}
     
-    # Print statistics
     print("\nDataset Statistics:")
     for split, counts in stats.items():
         print(f"  {split:6s}: {counts['images']:3d} images, {counts['labels']:3d} labels")
@@ -90,11 +68,7 @@ def verify_dataset(dataset_path):
     return stats
 
 
-# ==================== STEP 3: CHECK GPU ====================
-
 def check_gpu():
-    """Verify GPU is available"""
-    
     print("\n=== GPU Check ===")
     
     if torch.cuda.is_available():
@@ -105,26 +79,17 @@ def check_gpu():
         return True
     else:
         print(" No GPU detected! Training will use CPU (very slow)")
-        print("  Make sure you have:")
-        print("  1. NVIDIA GPU drivers installed")
-        print("  2. PyTorch with CUDA support installed")
         return False
 
 
-# ==================== STEP 4: TRAIN MODEL ====================
-
 def train_model(yaml_path, model_type=MODEL_TYPE):
-    """Train YOLOv5 model on pothole dataset"""
-    
     print(f"\n=== Training {model_type.upper()} ===")
     print(f"Epochs: {EPOCHS}")
     print(f"Batch size: {BATCH_SIZE}")
     print(f"Image size: {IMG_SIZE}")
     
-    # Load pre-trained model
     model = YOLO(f'{model_type}.pt')
     
-    # Train
     results = model.train(
         data=yaml_path,
         epochs=EPOCHS,
@@ -133,9 +98,9 @@ def train_model(yaml_path, model_type=MODEL_TYPE):
         device=DEVICE,
         project='pothole_detection',
         name='train',
-        patience=20,          # Early stopping patience
-        save=True,            # Save checkpoints
-        plots=True,           # Generate plots
+        patience=20,
+        save=True,
+        plots=True,
         verbose=True
     )
     
@@ -145,14 +110,9 @@ def train_model(yaml_path, model_type=MODEL_TYPE):
     return model, results
 
 
-# ==================== STEP 5: EVALUATE MODEL ====================
-
 def evaluate_model(model, yaml_path):
-    """Evaluate model on validation set"""
-    
     print("\n=== Evaluating Model ===")
     
-    # Run validation
     metrics = model.val(data=yaml_path)
     
     print(f"\nValidation Results:")
@@ -164,18 +124,12 @@ def evaluate_model(model, yaml_path):
     return metrics
 
 
-# ==================== STEP 6: TEST ON IMAGES ====================
-
 def test_on_images(model, test_dir, num_samples=5):
-    """Run inference on test images and display results"""
-    
     print("\n=== Testing on Sample Images ===")
     
-    # Create output directory
     output_dir = 'pothole_detection/test_results'
     os.makedirs(output_dir, exist_ok=True)
     
-    # Get test images
     test_images = [os.path.join(test_dir, f) for f in os.listdir(test_dir) 
                    if f.endswith(('.jpg', '.jpeg', '.png'))][:num_samples]
     
@@ -183,23 +137,19 @@ def test_on_images(model, test_dir, num_samples=5):
         print("No test images found!")
         return
     
-    # Run inference
     results = model(test_images)
     
-    # Display results
     for i, result in enumerate(results):
-        # Plot
         plt.figure(figsize=(10, 8))
-        img = result.plot()  # Get annotated image
+        img = result.plot()
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         plt.imshow(img)
         plt.axis('off')
         plt.title(f"Test Image {i+1} - Pothole Detection")
         plt.tight_layout()
         plt.savefig(f'{output_dir}/test_result_{i+1}.png', dpi=150, bbox_inches='tight')
-        plt.close()  # Close figure to free memory
+        plt.close()
         
-        # Print detections
         boxes = result.boxes
         print(f"\nImage {i+1}: {len(boxes)} pothole(s) detected")
         for j, box in enumerate(boxes):
@@ -209,36 +159,19 @@ def test_on_images(model, test_dir, num_samples=5):
     print(f"\n✓ Test results saved to: {output_dir}/")
 
 
-# ==================== STEP 7: SAVE FOR DEPLOYMENT ====================
-
 def export_model(model):
-    """Export model to different formats"""
-    
     print("\n=== Exporting Model ===")
-    
-    # Export to ONNX (for deployment)
     model.export(format='onnx')
     print("✓ Model exported to ONNX format")
-    
-    # You can also export to other formats:
-    # model.export(format='torchscript')  # TorchScript
-    # model.export(format='tflite')       # TensorFlow Lite
-    # model.export(format='engine')       # TensorRT (fastest inference)
 
-
-# ==================== MAIN EXECUTION ====================
 
 def main():
-    """Main training pipeline"""
-    
     print("=" * 60)
     print("POTHOLE DETECTION - YOLOV5 TRAINING")
     print("=" * 60)
     
-    # Step 1: Check GPU
     check_gpu()
     
-    # Step 2: Verify dataset
     stats = verify_dataset(DATASET_PATH)
     
     if not stats:
@@ -246,21 +179,14 @@ def main():
         print("Please check your dataset path and structure.")
         return
     
-    # Step 3: Create dataset config
     yaml_path = create_dataset_yaml()
-    
-    # Step 4: Train model
     model, results = train_model(yaml_path)
-    
-    # Step 5: Evaluate model
     metrics = evaluate_model(model, yaml_path)
     
-    # Step 6: Test on sample images
     test_dir = os.path.join(DATASET_PATH, 'images', 'test')
     if os.path.exists(test_dir):
         test_on_images(model, test_dir, num_samples=5)
     
-    # Step 7: Export model
     export_model(model)
     
     print("\n" + "=" * 60)
@@ -274,28 +200,22 @@ def main():
     print("  results = model('path/to/your/image.jpg')")
 
 
-# ==================== UTILITY FUNCTIONS ====================
-
 def resume_training():
-    """Resume training from last checkpoint"""
     model = YOLO('pothole_detection/train/weights/last.pt')
     model.train(resume=True)
 
 
 def predict_single_image(image_path):
-    """Quick prediction on a single image"""
     model = YOLO('pothole_detection/train/weights/best.pt')
     results = model(image_path)
-    results[0].show()  # Display result
+    results[0].show()
     return results
 
 
 def predict_video(video_path, output_path='output_video.mp4'):
-    """Run detection on video"""
     model = YOLO('pothole_detection/train/weights/best.pt')
     results = model(video_path, stream=True)
     
-    # Process video
     cap = cv2.VideoCapture(video_path)
     fps = int(cap.get(cv2.CAP_PROP_FPS))
     width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
@@ -312,11 +232,5 @@ def predict_video(video_path, output_path='output_video.mp4'):
     print(f" Video saved to: {output_path}")
 
 
-# ==================== RUN ====================
-
 if __name__ == "__main__":
     main()
-    
-    # Uncomment to test individual functions:
-    # predict_single_image('path/to/test/image.jpg')
-    # predict_video('path/to/video.mp4')
