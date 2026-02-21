@@ -1,3 +1,4 @@
+# Importing all need libraries and modules
 import argparse
 from ultralytics import YOLO
 import cv2
@@ -5,18 +6,19 @@ import os
 
 def detect_pothole(image_path, model_path='best.pt', save_output=False, show_result=False):
     try:
+        # The kind of model being used
         print(f"Loading model from: {model_path}")
         model = YOLO(model_path)
-        
+        # Image being loaded
         print(f"Processing image: {image_path}")
         results = model(image_path)
-        
+        # Displaying the results after detecting presence of potholes or not
         result = results[0]
         
         if show_result:
             result.show()
             print("Displaying result window. Close it to continue...")
-        
+        # Showing where the logs are kept
         if save_output:
             base_name = os.path.basename(image_path)
             name, ext = os.path.splitext(base_name)
@@ -42,7 +44,7 @@ def detect_pothole(image_path, model_path='best.pt', save_output=False, show_res
     except Exception as e:
         print(f"Error during detection: {e}")
         return None
-
+# Main function to call that model
 def main():
     parser = argparse.ArgumentParser(description='Detect potholes in images using YOLO')
     parser.add_argument('image', type=str, help='Path to the input image')

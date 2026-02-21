@@ -5,7 +5,7 @@ from ultralytics import YOLO
 import cv2
 import matplotlib.pyplot as plt
 
-
+# Configure your own datasets and make sure that they are classified in a good order.
 DATASET_PATH = r"C:\Users\.."
 
 IMG_SIZE = 640         
