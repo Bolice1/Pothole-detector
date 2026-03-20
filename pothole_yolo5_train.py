@@ -15,7 +15,7 @@ DEVICE = 0
 
 MODEL_TYPE = 'yolov5s'  
 
-
+# function for dataset creation 
 def create_dataset_yaml():
     dataset_config = f"""
 path: {DATASET_PATH}
